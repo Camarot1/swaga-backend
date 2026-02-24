@@ -1,3 +1,4 @@
+require('dotenv').config()
 const express = require('express')
 const app = express()
 const cors = require('cors')
@@ -6,8 +7,10 @@ const port = 4000
 app.use(cors())
 app.use(express.json())
 
+const apiMiddleware = require('./middleware/auth')
+
 const usersRouter = require('./routes/users')
-app.use('/users', usersRouter)
+app.use('/users', usersRouter, apiMiddleware)
 
 
 const subsRouter = require('./routes/subs')
@@ -21,6 +24,9 @@ app.use('/order', orderRouter)
 
 const reviewsPage = require('./routes/reviews')
 app.use('/reviews', reviewsPage)
+
+
+
 
 app.get('/',(req,res) => {
     res.send('Сервер работает')
