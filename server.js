@@ -10,7 +10,7 @@ app.use(express.json())
 const apiMiddleware = require('./middleware/auth')
 
 const usersRouter = require('./routes/users')
-app.use('/users', usersRouter, apiMiddleware)
+app.use('/users',apiMiddleware, usersRouter)
 
 
 const subsRouter = require('./routes/subs')
