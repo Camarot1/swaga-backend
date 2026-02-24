@@ -1,4 +1,4 @@
-module.export = (req, res, next) => {
+module.exports = function(req, res, next) {
     const apiKey = req.headers['x-api-key']
 
     const validKey = process.env.AUTH_KEY
