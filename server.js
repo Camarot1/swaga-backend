@@ -25,6 +25,8 @@ app.use('/order', orderRouter)
 const reviewsPage = require('./routes/reviews')
 app.use('/reviews', reviewsPage)
 
+const posterPage = require('./routes/poster.js')
+app.use('/poster', posterPage)
 
 
 

@@ -1,9 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const db = require('../db')
-const jwt = require('jsonwebtoken')
 
-const JWT_SECRET = 'randompassword123'
 
 
 
