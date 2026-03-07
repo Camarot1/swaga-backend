@@ -20,7 +20,7 @@ const gamesRouter = require('./routes/games')
 app.use('/games', gamesRouter)
 
 const orderRouter = require('./routes/order')
-app.use('/order', orderRouter)
+app.use('/order',apiMiddleware, orderRouter)
 
 const reviewsPage = require('./routes/reviews')
 app.use('/reviews', reviewsPage)

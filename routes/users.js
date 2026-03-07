@@ -95,10 +95,10 @@ router.post('/register', async (req, res) => {
         });
     }
 
-    if (password.length < 3) {
+    if (password.length < 8) {
         return res.status(400).json({ 
             success: false, 
-            message: 'Пароль должен содержать минимум 3 символа' 
+            message: 'Пароль должен содержать минимум 8 символов' 
         });
     }
 
@@ -142,3 +142,5 @@ router.post('/register', async (req, res) => {
 });
 
 module.exports = router
+
+// добавить хеширование паролей и дополнительную безопасность

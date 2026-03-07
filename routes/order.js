@@ -30,3 +30,5 @@ router.post('/', async (req, res) => {
 });
 
 module.exports = router;
+
+// ДОБАВИТЬ ЛОГИКУ ПРОВЕРКИ ЗАПРОСА В АДМИНКЕ, ДОБАВИТЬ НА ФРОНТЕ API КЛЮЧ В ОПИСАНИЕ HEADER ЗАПРОСА
