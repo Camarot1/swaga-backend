@@ -16,22 +16,12 @@ router.post('/', async (req, res) => {
     try {
         const { email, login, price, type } = req.body;
         
-        // Логируем полученные данные
-        console.log('Received data:', { email, login, price, type });
-        console.log('Type value:', type, 'Type type:', typeof type);
-
-        // Проверка обязательных полей
-        if (!email || !price || !type) {
-            console.log('Missing fields:', { email: !!email, price: !!price, type: !!type });
-            return res.status(400).json({ error: 'Не все обязательные поля заполнены' });
-        }
 
         const [result] = await db.execute(
             'INSERT INTO orders (email, login, type, price) VALUES (?, ?, ?, ?)',
-            [email, login, type, parseFloat(price)] // Принудительно преобразуем price в число
+            [email, login, type, price]
         );
 
-        console.log('Insert result:', result);
         res.json({ success: true, id: result.insertId });
 
     } catch (error) {
