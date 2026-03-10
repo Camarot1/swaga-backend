@@ -14,22 +14,19 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
     try {
-        const { email, login, price, type } = req.body;
-        
-
+        const { email, login, price, type, idProduct } = req.body;
+    
         const [result] = await db.execute(
-            'INSERT INTO orders (email, login, type, price) VALUES (?, ?, ?, ?)',
-            [email, login, type, price]
+            'INSERT INTO orders (email, login, type, price, idProduct) VALUES (?, ?, ?, ?, ?)',
+            [email, login, type, price, idProduct]
         );
 
         res.json({ success: true, id: result.insertId });
 
     } catch (error) {
-        console.error('Error creating order:', error);
         res.status(500).json({ error: 'Ошибка при создании заказа' });
     }
 });
-
 module.exports = router;
 
 // ДОБАВИТЬ ЛОГИКУ ПРОВЕРКИ ЗАПРОСА В АДМИНКЕ, ДОБАВИТЬ НА ФРОНТЕ API КЛЮЧ В ОПИСАНИЕ HEADER ЗАПРОСА
