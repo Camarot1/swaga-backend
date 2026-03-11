@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db')
-const mail = require('../mail.js')
+const mail = require('../config/mail.js')
 const emailService = require('../services/email')
 
 router.get('/', async (req, res) => {
