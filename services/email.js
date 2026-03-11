@@ -2,6 +2,9 @@ const transporter = require('../config/mail')
 
 class EmailService {
     async sendOrderConfirmation(orderData) {
+        if (!orderData.email) {
+            throw new Error('Email получателя не указан');
+        }
         const mailOptions = {
             from: `"Магазин SWAGA" `,
             to: orderData.email,

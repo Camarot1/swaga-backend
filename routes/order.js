@@ -16,14 +16,20 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
     try {
-        const {title, email, login, price, type, idProduct } = req.body;
-    
+        const { title, email, login, price, type, idProduct } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ error: 'Email обязателен' });
+        }
+
         const [result] = await db.execute(
             'INSERT INTO orders (email, login, type, price, idProduct) VALUES (?, ?, ?, ?, ?)',
             [email, login, type, price, idProduct]
         );
 
-         emailService.sendOrderConfirmation({
+        const orderId = result.insertId;
+
+        emailService.sendOrderConfirmation({
             orderId,
             email,
             price,
@@ -35,6 +41,7 @@ router.post('/', async (req, res) => {
         res.json({ success: true, id: result.insertId });
 
     } catch (error) {
+        console.error('Error creating order:', error);
         res.status(500).json({ error: 'Ошибка при создании заказа' });
     }
 });
