@@ -1,4 +1,4 @@
-const transporter = require('../mail')
+const transporter = require('../config/mail')
 
 class EmailService {
     async sendOrderConfirmation(orderData) {
