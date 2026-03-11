@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db')
+const emailService = require('../services/email')
 
 router.get('/', async (req, res) => {
     try {
@@ -14,12 +15,21 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
     try {
-        const { email, login, price, type, idProduct } = req.body;
+        const {title, email, login, price, type, idProduct } = req.body;
     
         const [result] = await db.execute(
             'INSERT INTO orders (email, login, type, price, idProduct) VALUES (?, ?, ?, ?, ?)',
             [email, login, type, price, idProduct]
         );
+
+         emailService.sendOrderConfirmation({
+            orderId,
+            email,
+            price,
+            title
+        }).catch(err => {
+            console.error('Ошибка при отправке письма для заказа', orderId, ':', err.message)
+        })
 
         res.json({ success: true, id: result.insertId });
 
