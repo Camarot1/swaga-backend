@@ -1,105 +1,19 @@
 const express = require('express')
 const router = express.Router()
 const db = require('../db')
+const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
+const auth = require('../middleware/auth')
 
-
-
-
-router.post('/login', async (req, res) => {
-    const { login, password } = req.body;
-
-    if (!login || !password) {
-        return res.status(400).json({ 
-            success: false, 
-            message: 'Логин и пароль обязательны' 
-        }); 
-    }
-
-    try {
-        const [users] = await db.execute(
-            'SELECT * FROM users WHERE login = ? AND password = ?',
-            [login, password]
-        );
-
-        if (users.length === 0) {
-            return res.json({ 
-                success: false, 
-                message: 'Неверные учетные данные' 
-            });
-        }
-
-        const userFromDB = users[0];
-        
-        const user = {
-            id: userFromDB.id,
-            login: userFromDB.login,
-            isAdmin: userFromDB.isAdmin,
-            password: userFromDB.password
-        };
-        
-        console.log('User data:', user);
-        
-        res.json({
-            success: true,
-            user: user,
-            redirectTo: user.isAdmin ? '/admin' : '/profile'
-        });
-
-    } catch (error) {
-        console.error('Ошибка при входе:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Ошибка сервера' 
-        });
-    }
-});
-router.get('/', async (req, res) => {
-    try {
-        const [rows] = await db.execute('SELECT id, login, password, isAdmin FROM users');
-        res.json(rows);
-    } catch (err) {
-        console.error("ERROR ON GET USERS: ", err);
-        res.status(500).json({ message: 'SERVER ERROR' });
-    }
-});
-
-router.delete('/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const [result] = await db.execute('DELETE FROM users WHERE id = ?', [id]);
-        
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ message: 'Пользователь не найден' });
-        }
-        
-        res.json({ message: 'Пользователь успешно удален' });
-    } catch (err) {
-        console.error("ERROR ON DELETE USER: ", err);
-        res.status(500).json({ message: 'SERVER ERROR' });
-    }
-});
 router.post('/register', async (req, res) => {
     const { login, password, confirmPassword } = req.body;
 
     if (!login || !password || !confirmPassword) {
-        return res.status(400).json({ 
-            success: false, 
-            message: 'Все поля обязательны для заполнения' 
-        });
+        return res.status(400).json({ message: 'Все поля обязательны' });
     }
 
     if (password !== confirmPassword) {
-        return res.status(400).json({ 
-            success: false, 
-            message: 'Пароли не совпадают' 
-        });
-    }
-
-    if (password.length < 8) {
-        return res.status(400).json({ 
-            success: false, 
-            message: 'Пароль должен содержать минимум 8 символов' 
-        });
+        return res.status(400).json({ message: 'Пароли не совпадают' });
     }
 
     try {
@@ -109,38 +23,101 @@ router.post('/register', async (req, res) => {
         );
 
         if (existingUsers.length > 0) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Пользователь с таким логином уже существует' 
-            });
+            return res.status(400).json({ message: 'Пользователь уже существует' });
         }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
 
         const [result] = await db.execute(
             'INSERT INTO users (login, password, isAdmin) VALUES (?, ?, ?)',
-            [login, password, 0]
-        );
-
-        // Возвращаем данные нового пользователя
-        const [newUser] = await db.execute(
-            'SELECT id, login, isAdmin FROM users WHERE id = ?',
-            [result.insertId]
+            [login, hashedPassword, 0]
         );
 
         res.json({
             success: true,
-            message: 'Регистрация прошла успешно',
-            user: newUser[0]
+            message: 'Регистрация успешна'
         });
 
     } catch (error) {
-        console.error('Ошибка при регистрации:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Ошибка сервера' 
+        res.status(500).json({ message: 'Ошибка сервера' });
+    }
+})
+
+router.post('/login', async (req, res) => {
+    const { login, password } = req.body;
+
+    try {
+        const [users] = await db.execute(
+            'SELECT * FROM users WHERE login = ?',
+            [login]
+        );
+
+        if (users.length === 0) {
+            return res.status(401).json({ message: 'Неверные данные' });
+        }
+
+        const user = users[0];
+
+        const isMatch = await bcrypt.compare(password, user.password);
+
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Неверные данные' });
+        }
+
+        const token = jwt.sign(
+            { id: user.id, isAdmin: user.isAdmin },
+            process.env.JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+
+        res.json({
+            success: true,
+            token,
+            user: {
+                id: user.id,
+                login: user.login,
+                isAdmin: user.isAdmin
+            }
         });
+
+    } catch (error) {
+        res.status(500).json({ message: 'Ошибка сервера' });
+    }
+})
+
+router.get('/', auth, async (req, res) => {
+    try {
+        const [rows] = await db.execute(
+            'SELECT id, login, isAdmin FROM users'
+        );
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({ message: 'SERVER ERROR' });
+    }
+});
+
+router.delete('/:id', auth, async (req, res) => {
+    if (!req.user.isAdmin) {
+        return res.status(403).json({ message: 'Нет прав' });
+    }
+
+    try {
+        const { id } = req.params;
+
+        const [result] = await db.execute(
+            'DELETE FROM users WHERE id = ?',
+            [id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Пользователь не найден' });
+        }
+
+        res.json({ message: 'Удалено' });
+
+    } catch (err) {
+        res.status(500).json({ message: 'SERVER ERROR' });
     }
 });
 
 module.exports = router
-
-// добавить хеширование паролей и дополнительную безопасность

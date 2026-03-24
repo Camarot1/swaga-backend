@@ -1,15 +1,19 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db')
-const mail = require('../config/mail.js')
+const auth = require('../middleware/auth')
 const emailService = require('../services/email')
 
-router.get('/', async (req, res) => {
+
+router.get('/', auth, async (req, res) => {
+    if (!req.user.isAdmin) {
+        return res.status(403).json({ error: 'Нет прав' });
+    }
+
     try {
         const [orders] = await db.execute('SELECT * FROM orders');
         res.json(orders);
     } catch (error) {
-        console.error('Error fetching orders:', error);
         res.status(500).json({ error: 'Ошибка при получении заказов' });
     }
 });
@@ -22,9 +26,22 @@ router.post('/', async (req, res) => {
             return res.status(400).json({ error: 'Email обязателен' });
         }
 
+        let userLogin = login || null;
+
+        if (req.headers.authorization) {
+            try {
+                const token = req.headers.authorization.split(' ')[1];
+                const jwt = require('jsonwebtoken');
+                const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+                userLogin = decoded.login || userLogin;
+            } catch (e) {
+            }
+        }
+
         const [result] = await db.execute(
             'INSERT INTO orders (email, login, type, price, idProduct) VALUES (?, ?, ?, ?, ?)',
-            [email, login, type, price, idProduct]
+            [email, userLogin, type, price, idProduct]
         );
 
         const orderId = result.insertId;
@@ -35,16 +52,14 @@ router.post('/', async (req, res) => {
             price,
             title
         }).catch(err => {
-            console.error('Ошибка при отправке письма для заказа', orderId, ':', err.message)
+            console.error('Ошибка email:', err.message)
         })
 
-        res.json({ success: true, id: result.insertId });
+        res.json({ success: true, id: orderId });
 
     } catch (error) {
-        console.error('Error creating order:', error);
         res.status(500).json({ error: 'Ошибка при создании заказа' });
     }
 });
-module.exports = router;
 
-// ДОБАВИТЬ ЛОГИКУ ПРОВЕРКИ ЗАПРОСА В АДМИНКЕ, ДОБАВИТЬ НА ФРОНТЕ API КЛЮЧ В ОПИСАНИЕ HEADER ЗАПРОСА
+module.exports = router;

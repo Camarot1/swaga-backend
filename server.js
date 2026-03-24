@@ -13,7 +13,7 @@ app.use(express.json())
 const apiMiddleware = require('./middleware/auth')
 
 const usersRouter = require('./routes/users')
-app.use('/users',apiMiddleware, usersRouter)
+app.use('/users',usersRouter)
 
 
 const subsRouter = require('./routes/subs')
@@ -23,7 +23,7 @@ const gamesRouter = require('./routes/games')
 app.use('/games', gamesRouter)
 
 const orderRouter = require('./routes/order')
-app.use('/order',apiMiddleware, orderRouter)
+app.use('/order', orderRouter)
 
 const reviewsPage = require('./routes/reviews')
 app.use('/reviews', reviewsPage)

@@ -1,13 +1,19 @@
+const jwt = require('jsonwebtoken')
+
 module.exports = function(req, res, next) {
-    const apiKey = req.headers['x-api-key']
+    const authHeader = req.headers.authorization
 
-    const validKey = process.env.AUTH_KEY
-
-    if (!apiKey || apiKey !== validKey){
-        return res.status(403).json({
-            error: 'Доступ запрещен'
-        })
+    if (!authHeader) {
+        return res.status(401).json({ message: 'Нет токена' })
     }
-     
-    next()
+
+    const token = authHeader.split(' ')[1]
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET)
+        req.user = decoded
+        next()
+    } catch (e) {
+        return res.status(403).json({ message: 'Неверный токен' })
+    }
 }
