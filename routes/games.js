@@ -2,8 +2,10 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const axios = require('axios');
+const auth = require('../middleware/auth');
+const admin = require('../middleware/admin');
 
-router.post('/save-game/:appId', async (req, res) => {
+router.post('/save-game/:appId', auth, admin, async (req, res) => {
     try {
         const { appId } = req.params;
 
@@ -191,7 +193,7 @@ function safeJsonParse(str) {
         return [];
     }
 }
-router.delete('/:id', async (req, res) => {
+router.delete('/:id',  auth, admin, async (req, res) => {
     try {
         const { id } = req.params;
         const [result] = await db.execute('DELETE FROM games WHERE id = ?', [id]);

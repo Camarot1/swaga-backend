@@ -3,7 +3,8 @@ const router = express.Router()
 const db = require('../db')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
-const auth = require('../middleware/auth')
+const auth = require('../middleware/auth');
+const admin = require('../middleware/admin');
 
 router.post('/register', async (req, res) => {
     const { login, password, confirmPassword } = req.body;
@@ -65,9 +66,9 @@ router.post('/login', async (req, res) => {
         }
 
         const token = jwt.sign(
-            { id: user.id, isAdmin: user.isAdmin },
+            { id: user.id, login: user.login, isAdmin: user.isAdmin },
             process.env.JWT_SECRET,
-            { expiresIn: '24h' }
+            { expiresIn: '4h' }
         );
 
         res.json({
@@ -85,7 +86,7 @@ router.post('/login', async (req, res) => {
     }
 })
 
-router.get('/', auth, async (req, res) => {
+router.get('/', auth, admin, async (req, res) => {
     try {
         const [rows] = await db.execute(
             'SELECT id, login, isAdmin FROM users'
@@ -96,7 +97,7 @@ router.get('/', auth, async (req, res) => {
     }
 });
 
-router.delete('/:id', auth, async (req, res) => {
+router.delete('/:id', auth, admin, async (req, res) => {
     if (!req.user.isAdmin) {
         return res.status(403).json({ message: 'Нет прав' });
     }
@@ -118,6 +119,10 @@ router.delete('/:id', auth, async (req, res) => {
     } catch (err) {
         res.status(500).json({ message: 'SERVER ERROR' });
     }
+});
+
+router.get('/check-admin', auth, (req, res) => {
+    res.json({ isAdmin: req.user.isAdmin === 1 });
 });
 
 module.exports = router

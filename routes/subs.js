@@ -1,7 +1,10 @@
 const express = require('express')
 const router = express.Router()
 const db = require('../db')
-router.post('/', async (req, res) => {
+const auth = require('../middleware/auth');
+const admin = require('../middleware/admin');
+
+router.post('/', auth, admin, async (req, res) => {
     try {
         const {
             img,
@@ -55,7 +58,7 @@ router.get('/:id', async (req, res) => {
     }
 })
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', auth, admin, async (req, res) => {
     try {
         const { id } = req.params;
         const [result] = await db.execute('DELETE FROM subs WHERE id = ?', [id]);

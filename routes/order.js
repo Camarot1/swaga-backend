@@ -1,15 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db')
-const auth = require('../middleware/auth')
 const emailService = require('../services/email')
+const auth = require('../middleware/auth');
+const admin = require('../middleware/admin');
 
-
-router.get('/', auth, async (req, res) => {
-    if (!req.user.isAdmin) {
-        return res.status(403).json({ error: 'Нет прав' });
-    }
-
+router.get('/', auth, admin, auth, async (req, res) => {
     try {
         const [orders] = await db.execute('SELECT * FROM orders');
         res.json(orders);
@@ -28,20 +24,21 @@ router.post('/', async (req, res) => {
 
         let userLogin = login || null;
 
-        if (req.headers.authorization) {
+        const authHeader = req.headers.authorization;
+        if (authHeader) {
             try {
-                const token = req.headers.authorization.split(' ')[1];
+                const token = authHeader.split(' ')[1];
                 const jwt = require('jsonwebtoken');
                 const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
+                // если в токен добавлен login, используем его, если нет - останется переданный login или null
                 userLogin = decoded.login || userLogin;
             } catch (e) {
             }
         }
 
         const [result] = await db.execute(
-            'INSERT INTO orders (email, login, type, price, idProduct) VALUES (?, ?, ?, ?, ?)',
-            [email, userLogin, type, price, idProduct]
+            'INSERT INTO orders (email, login, type, price, idProduct, title) VALUES (?, ?, ?, ?, ?, ?)',
+            [email, userLogin, type, price, idProduct, title]
         );
 
         const orderId = result.insertId;
@@ -52,12 +49,12 @@ router.post('/', async (req, res) => {
             price,
             title
         }).catch(err => {
-            console.error('Ошибка email:', err.message)
-        })
+            console.error('Ошибка email:', err.message);
+        });
 
         res.json({ success: true, id: orderId });
-
     } catch (error) {
+        console.error(error);
         res.status(500).json({ error: 'Ошибка при создании заказа' });
     }
 });
