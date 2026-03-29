@@ -37,8 +37,8 @@ router.post('/', async (req, res) => {
         }
 
         const [result] = await db.execute(
-            'INSERT INTO orders (email, login, type, price, idProduct, title) VALUES (?, ?, ?, ?, ?, ?)',
-            [email, userLogin, type, price, idProduct, title]
+            'INSERT INTO orders (email, login, type, price, idProduct) VALUES (?, ?, ?, ?, ?)',
+            [email, userLogin, type, price, idProduct]
         );
 
         const orderId = result.insertId;
