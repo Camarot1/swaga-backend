@@ -4,7 +4,6 @@ const db = require('../db');
 const axios = require('axios');
 const auth = require('../middleware/auth');
 const admin = require('../middleware/admin');
-
 router.post('/save-game/:appId', auth, admin, async (req, res) => {
     try {
         const { appId } = req.params;
@@ -94,7 +93,6 @@ router.get('/', async (req, res) => {
             FROM games 
             ORDER BY id DESC
         `);
-
         const games = rows.map(game => {
             try {
                 const screenshots = safeJsonParse(game.screenshots);
@@ -126,9 +124,7 @@ router.get('/', async (req, res) => {
                 };
             }
         });
-
         res.json(games);
-
     } catch (error) {
         console.error('Ошибка при получении списка игр:', error);
         res.status(500).json({
@@ -137,8 +133,6 @@ router.get('/', async (req, res) => {
         });
     }
 });
-
-
 router.get('/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -148,9 +142,7 @@ router.get('/:id', async (req, res) => {
         if (rows.length === 0) {
             return res.status(404).json({ error: 'Игра не найдена' });
         }
-
         const game = rows[0];
-
         const formattedGame = {
             id: game.id,
             img: game.img,
@@ -167,9 +159,7 @@ router.get('/:id', async (req, res) => {
             steam_appid: game.steam_appid,
             steam_price: game.steam_price
         };
-
         res.json(formattedGame);
-
     } catch (error) {
         console.error('Ошибка при получении игры:', error);
         res.status(500).json({
@@ -178,14 +168,11 @@ router.get('/:id', async (req, res) => {
         });
     }
 });
-
 // функция для безопасного парсинга JSON
 function safeJsonParse(str) {
     try {
         if (typeof str === 'object') return str;
-
         if (!str || str === 'null') return [];
-
         const parsed = JSON.parse(str);
         return Array.isArray(parsed) ? parsed : [];
     } catch (error) {
@@ -197,11 +184,9 @@ router.delete('/:id',  auth, admin, async (req, res) => {
     try {
         const { id } = req.params;
         const [result] = await db.execute('DELETE FROM games WHERE id = ?', [id]);
-
         if (result.affectedRows === 0) {
             return res.status(404).json({ error: 'Игра не найдена' });
         }
-
         res.json({ message: 'Игра успешно удалена' });
     } catch (err) {
         console.error("ERROR ON DELETE GAME: ", err);
@@ -209,25 +194,3 @@ router.delete('/:id',  auth, admin, async (req, res) => {
     }
 });
 module.exports = router;
-/*
-CREATE TABLE `games` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `img` varchar(255) NOT NULL,
-  `img_card` varchar(255) NOT NULL,
-  `name` varchar(500) NOT NULL,
-  `about_the_game` text,
-  `supported_languages` text,
-  `min_requirements` text,
-  `rec_requirements` text,
-  `genres` json DEFAULT NULL,
-  `screenshots` json DEFAULT NULL,
-  `countries` json DEFAULT NULL,
-  `prices` json DEFAULT NULL,
-  `steam_appid` int DEFAULT NULL,
-  `steam_price` text,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `steam_appid` (`steam_appid`)
-) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
-*/

@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router()
 const db = require('../db')
-
 router.get('/', async (req, res) => {
     try {
         const [reviews] = await db.execute('SELECT * FROM reviews')
@@ -11,7 +10,6 @@ router.get('/', async (req, res) => {
         res.status(500).json({ error: 'Ошибка при получении заказов' })
     }
 });
-
 router.post('/', async (req, res) => {
     try {
         const { login, reviewsText, reviewsPoint } = req.body;
@@ -26,5 +24,4 @@ router.post('/', async (req, res) => {
         res.status(500).json({ error: 'Ошибка при создании отзыва'})
     }
 })
-
 module.exports = router;

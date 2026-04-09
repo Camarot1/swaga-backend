@@ -31,8 +31,6 @@ app.use('/reviews', reviewsPage)
 const posterPage = require('./routes/poster.js')
 app.use('/poster', posterPage)
 
-
-
 app.get('/',(req,res) => {
     res.send('Сервер работает')
 }) 
