@@ -14,6 +14,9 @@ module.exports = function(req, res, next) {
         req.user = decoded
         next()
     } catch (e) {
+        if (e.name === 'TokenExpiredError'){
+            return res.status(401).json({message:'Токен истек, перезайдите в профиль'})
+        }
         return res.status(403).json({ message: 'Неверный токен' })
     }
 }
