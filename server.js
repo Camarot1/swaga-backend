@@ -32,7 +32,7 @@ const posterPage = require('./routes/poster.js')
 app.use('/poster', posterPage)
 
 const searchPage = require('./routes/search.js')
-app.use('/', posterPage)
+app.use('/', searchPagePage)
 
 app.get('/',(req,res) => {
     res.send('Сервер работает')
