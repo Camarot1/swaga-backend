@@ -2,18 +2,18 @@ const express = require('express')
 const router = express.Router()
 const db = require('../db')
 
-router.get('./api/search', async (req, res) => {
+router.get('/api/search', async (req, res) => {
     try{
         const { q } = req.query;
 
-        if (!q || q.trip() === ''){
+        if (!q || q.trim() === ''){
             return res.json({
                 subsQ: [],
                 gamesQ: []
             })
         }
 
-        const search = '%${q.toLowerCase())%';
+        const search = `%${q.toLowerCase()}%`;
 
         const sub = `
         SELECT id, img, title, priceNew FROM subs WHERE LOWER (title) LIKE ? 
@@ -24,16 +24,16 @@ router.get('./api/search', async (req, res) => {
         LIKE ? OR LOWER(genres) LIKE ? OR LOWER (about_the_game) LIKE ? LIMIT 20
         `;
 
-        const [subs] = await db.query(subs, [searchTerm])
-        const [games] = await db.query(game, [searchTerm, searchTerm, searchTerm,])
+        const [subs] = await db.query(sub, [search])
+        const [games] = await db.query(game, [search, search, search])
 
         res.json({
-            subsQ: sub,
-            gamesQ: game,
+            subsQ: subs,
+            gamesQ: games,
             query: q
         });
     } catch (error){
-        console.error('Ошика поиска', error)
+        console.error('Ошибка поиска', error)
         res.status(500).json({error: 'Ошибка поиска'})
     }
 })
