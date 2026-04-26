@@ -2,7 +2,7 @@ const express = require('express')
 const router = express.Router()
 const db = require('../db')
 
-router.get('/result', async (req, res) => {
+router.get('/api/search', async (req, res) => {
     try{
         const { q } = req.query;
 
