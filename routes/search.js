@@ -37,3 +37,5 @@ router.get('/api/search', async (req, res) => {
         res.status(500).json({error: 'Ошибка поиска'})
     }
 })
+
+module.exports = router
