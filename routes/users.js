@@ -20,7 +20,7 @@ router.post('/register', async (req, res) => {
             [login, email]
         );
         if (existingUsers.length > 0) {
-            return res.status(400).json({ message: 'Пользователь уже существует' });
+            return res.status(400).json({ message: 'Логин или почта заняты' });
         }
         const hashedPassword = await bcrypt.hash(password, 10);
         const [result] = await db.execute(
@@ -51,16 +51,17 @@ router.post('/login', async (req, res) => {
             return res.status(401).json({ message: 'Неверные данные' });
         }
         const token = jwt.sign(
-            { id: user.id, login: user.login, isAdmin: user.isAdmin },
+            { id: user.id, login: user.login, isAdmin: user.isAdmin, email: user.email },
             process.env.JWT_SECRET,
-            { expiresIn: '1d' }
+            { expiresIn: '6h' }
         );
         res.json({
             success: true,
             token,
             user: {
                 id: user.id,
-                login: user.login
+                login: user.login,
+                email:user.email
             }
         });
     } catch (error) {
