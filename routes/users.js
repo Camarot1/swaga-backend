@@ -7,8 +7,8 @@ const auth = require('../middleware/auth');
 const admin = require('../middleware/admin');
 
 router.post('/register', async (req, res) => {
-    const { login, password, confirmPassword } = req.body;
-    if (!login || !password || !confirmPassword) {
+    const { login, password, confirmPassword, email } = req.body;
+    if (!login || !password || !confirmPassword ||!email) {
         return res.status(400).json({ message: 'Все поля обязательны' });
     }
     if (password !== confirmPassword) {
@@ -16,16 +16,16 @@ router.post('/register', async (req, res) => {
     }
     try {
         const [existingUsers] = await db.execute(
-            'SELECT id FROM users WHERE login = ?',
-            [login]
+            'SELECT id FROM users WHERE login = ? OR email = ?',
+            [login, email]
         );
         if (existingUsers.length > 0) {
             return res.status(400).json({ message: 'Пользователь уже существует' });
         }
         const hashedPassword = await bcrypt.hash(password, 10);
         const [result] = await db.execute(
-            'INSERT INTO users (login, password, isAdmin) VALUES (?, ?, ?)',
-            [login, hashedPassword, 0]
+            'INSERT INTO users (login, password, email, isAdmin) VALUES (?, ?, ?, ?)',
+            [login, hashedPassword, email, 0]
         );
         res.json({
             success: true,
@@ -60,8 +60,7 @@ router.post('/login', async (req, res) => {
             token,
             user: {
                 id: user.id,
-                login: user.login,
-                isAdmin: user.isAdmin
+                login: user.login
             }
         });
     } catch (error) {
