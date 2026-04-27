@@ -69,14 +69,14 @@ router.post('/login', async (req, res) => {
     }
 })
 
-router.get('/history', async (req, res) => {
+router.get('/history', auth, async (req, res) => {
     try {
         const email = req.user.email
         if (!email) {
             return res.status(400).json({ message: 'Ошибка почты' })
         }
         const [history] = await db.query(
-            'SELECT * FROM orders WHERE email = ?'[email]
+            'SELECT * FROM orders WHERE email = ?' ,[email]
         )
         res.json({
             success: true,
