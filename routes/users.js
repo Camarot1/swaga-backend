@@ -8,7 +8,7 @@ const admin = require('../middleware/admin');
 
 router.post('/register', async (req, res) => {
     const { login, password, confirmPassword, email } = req.body;
-    if (!login || !password || !confirmPassword ||!email) {
+    if (!login || !password || !confirmPassword || !email) {
         return res.status(400).json({ message: 'Все поля обязательны' });
     }
     if (password !== confirmPassword) {
@@ -53,7 +53,7 @@ router.post('/login', async (req, res) => {
         const token = jwt.sign(
             { id: user.id, login: user.login, isAdmin: user.isAdmin, email: user.email },
             process.env.JWT_SECRET,
-            { expiresIn: '6h' }
+            { expiresIn: '2h' }
         );
         res.json({
             success: true,
@@ -61,17 +61,37 @@ router.post('/login', async (req, res) => {
             user: {
                 id: user.id,
                 login: user.login,
-                email:user.email
+                email: user.email
             }
         });
     } catch (error) {
         res.status(500).json({ message: 'Ошибка сервера' });
     }
 })
+
+router.get('/history', async (req, res) => {
+    try {
+        const email = req.user.email
+        if (!email) {
+            return res.status(400).json({ message: 'Ошибка почты' })
+        }
+        const [history] = await db.query(
+            'SELECT * FROM orders WHERE email = ?'[email]
+        )
+        res.json({
+            success: true,
+            email: email,
+            history: history
+        })
+    } catch (error) {
+        res.status(500).json({ error: 'Ошибка загрузки заказов' })
+    }
+})
+
 router.get('/', auth, admin, async (req, res) => {
     try {
         const [rows] = await db.execute(
-            'SELECT id, login, isAdmin FROM users'
+            'SELECT id, login, isAdmin, email FROM users'
         );
         res.json(rows);
     } catch (err) {
