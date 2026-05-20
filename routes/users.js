@@ -72,17 +72,11 @@ router.post('/login', async (req, res) => {
 router.get('/history', auth, async (req, res) => {
     try {
         const email = req.user.email
-        if (!email) {
-            return res.status(400).json({ message: 'Ошибка почты' })
-        }
+        const login = req.user.login
         const [history] = await db.query(
-            'SELECT * FROM orders WHERE email = ?' ,[email]
+            'SELECT * FROM orders WHERE email = ? OR login = ?' ,[email, login]
         )
-        res.json({
-            success: true,
-            email: email,
-            history: history
-        })
+        res.json(history)
     } catch (error) {
         res.status(500).json({ error: 'Ошибка загрузки заказов' })
     }
