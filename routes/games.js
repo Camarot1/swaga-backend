@@ -20,6 +20,19 @@ router.post('/save-game/:appId', auth, admin, async (req, res) => {
 
         const game = steamData.data;
 
+        const isFree = game.is_free === true || !game.price_overview?.final;
+        
+        let dynamicPrices = [];
+        
+        if (isFree) {
+            dynamicPrices = [0, 0, 0, 0];
+        } else {
+            const basePrice = game.price_overview.final / 100;
+            const multipliers = [1.1, 1.2, 1.3, 1.4];
+            dynamicPrices = multipliers.map(mult => Math.round(basePrice * mult));
+            console.log(`Базовая цена: ${basePrice}, сформированные цены: ${dynamicPrices.join(', ')}`);
+        }
+
         const gameData = {
             name: game.name,
             img: game.header_image,
@@ -33,12 +46,10 @@ router.post('/save-game/:appId', auth, admin, async (req, res) => {
                 game.screenshots?.slice(0, 5).map(screenshot => screenshot.path_thumbnail) || []
             ),
             countries: JSON.stringify(["Россия", "Армения", "Азербайджан", "Беларусь"]),
-            prices: JSON.stringify(["1000", "1100", "1200", "1300"]),
+            prices: JSON.stringify(dynamicPrices),
             steam_appid: parseInt(appId),
             steam_price: game.price_overview?.final_formatted
         };
-        console.log('First log:', game.price_overview);
-        console.log('Second:', game.price_overview?.final_formatted);
 
         const [result] = await db.query(
             `INSERT INTO games 
@@ -115,12 +126,12 @@ router.get('/', async (req, res) => {
                 return {
                     id: game.id,
                     img: null,
-                    img_card:null,
+                    img_card: null,
                     title: game.title,
                     priceNew: "0",
                     priceOld: null,
                     genres: [],
-                    steam_price: "0" 
+                    steam_price: "0"
                 };
             }
         });
@@ -180,7 +191,7 @@ function safeJsonParse(str) {
         return [];
     }
 }
-router.delete('/:id',  auth, admin, async (req, res) => {
+router.delete('/:id', auth, admin, async (req, res) => {
     try {
         const { id } = req.params;
         const [result] = await db.execute('DELETE FROM games WHERE id = ?', [id]);
