@@ -87,7 +87,6 @@ router.post('/save-game/:appId', auth, admin, async (req, res) => {
     }
 });
 
-// получить все игры для каталога
 router.get('/', async (req, res) => {
     try {
         const [rows] = await db.query(`
