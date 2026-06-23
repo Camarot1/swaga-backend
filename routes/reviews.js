@@ -15,7 +15,7 @@ router.post('/', async (req, res) => {
         const { login, reviewsText, reviewsPoint } = req.body;
 
         const [result] = await db.execute(
-            'INSERT INTO rewiews (login, reviewsText, reviewsPoint) VALUES (?,?,?)', [login, reviewsText, reviewsPoint]
+            'INSERT INTO reviews (login, reviewsText, reviewsPoint) VALUES (?,?,?)', [login, reviewsText, reviewsPoint]
         )
 
         res.json({ success: true, id: result.insertId})
